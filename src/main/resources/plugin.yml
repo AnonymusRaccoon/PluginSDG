@@ -1,3 +1,10 @@
 name: PluginSDG
 version: 1.0
 main: moe.sdg.PluginSDG.GameManager
+commands:
+  hub:
+    description: Return to the hub
+    usage: /<command>
+  sethub:
+    description: Set the hub location
+    usage: /<command>
