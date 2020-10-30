@@ -1,5 +1,6 @@
 package moe.sdg.PluginSDG;
 
+import moe.sdg.PluginSDG.games.DeathMatch;
 import moe.sdg.PluginSDG.Commands.HubCommand;
 import moe.sdg.PluginSDG.Commands.SetHubCommand;
 import org.apache.commons.lang.NotImplementedException;
@@ -26,19 +27,22 @@ public class GameManager extends JavaPlugin
 
 		getCommand("hub").setExecutor(new HubCommand(config));
 		getCommand("sethub").setExecutor(new SetHubCommand(config));
-		_games = new ArrayList<MiniGame>();
+		_games = new ArrayList<>();
 		getLogger().info("Game manager loaded.");
-	}
-
-	public Location getHubLocation()
-	{
-		throw new NotImplementedException();
 	}
 
 	@Override
 	public void onDisable()
 	{
 		super.onDisable();
+	}
+
+
+//! @brief return hub location
+	//! @return return a Location containing the server hub
+	public Location getHubLocation()
+	{
+		throw new NotImplementedException();
 	}
 
 	//! @brief factory for creating new game
@@ -48,7 +52,10 @@ public class GameManager extends JavaPlugin
 	public MiniGame createGame(GameType type, String map)
 	{
 		switch (type) {
-			// TODO: create a new game and add it the array list
+			case DeathMatch:
+				DeathMatch match = new DeathMatch(this);
+				this._games.add(match);
+				return match;
 		}
 		return null;
 	}
