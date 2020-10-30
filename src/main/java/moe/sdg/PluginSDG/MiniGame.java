@@ -17,6 +17,8 @@ public abstract class MiniGame
 		this._lobbyLocation = null;
 		this._players = new ArrayList<Player>();
 	}
+
+	public abstract GameType getType();
 	
 	//! @brief Return the current count of players in the game.
 	public int getCurrentPlayers()
