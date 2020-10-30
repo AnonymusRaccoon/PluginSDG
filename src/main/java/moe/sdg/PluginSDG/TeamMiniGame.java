@@ -11,6 +11,7 @@ class Team
 	
 	public Team(String name, int maxPlayer)
 	{
+		super();
 		this.name = name;
 		this.maxPlayer = maxPlayer;
 		this._players = new ArrayList<Player>();
@@ -36,8 +37,10 @@ public abstract class TeamMiniGame extends MiniGame
 {
 	private final ArrayList<Team> _teams;
 	
-	public TeamMiniGame()
+	
+	public TeamMiniGame(GameManager manager)
 	{
+		super(manager);
 		this._teams = new ArrayList<Team>();
 	}
 	
