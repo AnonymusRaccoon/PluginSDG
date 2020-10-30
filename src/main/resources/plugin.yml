@@ -1,3 +1,3 @@
 name: PluginSDG
 version: 1.0
-main: moe.sdg.PluginSDG.moe.sdg.PluginSDG.GameManager
+main: moe.sdg.PluginSDG.GameManager
