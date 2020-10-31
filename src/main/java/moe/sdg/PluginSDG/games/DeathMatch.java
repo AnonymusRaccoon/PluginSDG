@@ -7,11 +7,11 @@ import moe.sdg.PluginSDG.MiniGame;
 public class DeathMatch extends MiniGame {
 
     private int _maxPlayer = 4;
-    private boolean enforceMaxPlayer = false;
+    private boolean enforceMaxPlayer = true;
 
-    public DeathMatch(GameManager gameManager)
+    public DeathMatch(GameManager gameManager, String name)
     {
-        super(gameManager);
+        super(gameManager, name);
     }
 
     @Override
@@ -23,7 +23,7 @@ public class DeathMatch extends MiniGame {
     public int getMaxPlayers() {
         if (enforceMaxPlayer)
             return _maxPlayer;
-        return 0;
+        return -1;
     }
 
     //! @brief Start the game.
