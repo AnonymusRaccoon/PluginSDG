@@ -23,7 +23,7 @@ public class DeathMatch extends MiniGame
     @Override
     public int getMaxPlayers()
     {
-        if (enforceMaxPlayer)
+        if (this.enforceMaxPlayer)
             return _maxPlayer;
         return -1;
     }

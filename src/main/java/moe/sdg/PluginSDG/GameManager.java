@@ -55,6 +55,7 @@ public class GameManager extends JavaPlugin
 			case DeathMatch:
 				DeathMatch match = new DeathMatch(this, map, gameName != null ? gameName : this.generateNewName());
 				this._games.add(match);
+
 				return match;
 			default:
 				return null;
@@ -83,17 +84,22 @@ public class GameManager extends JavaPlugin
 		this._games.remove(game);
 	}
 
+	//! @brief Return a list of game whose GameType match a given type
 	public ArrayList<MiniGame> getGamesByType(final GameType type)
 	{
 		return this._games.stream().filter(e -> e.getType() == type)
 			.collect(Collectors.toCollection(ArrayList::new));
 	}
 
+	//! @brief Return the list of game created
 	public ArrayList<MiniGame> getGames()
 	{
 		return this._games;
 	}
 
+	//! @brief return an single game witch name match a given name. If there is multiple candidate the first one is returned
+	//! @param name The name of the game to get
+	//! @return
 	public MiniGame getGameByName(String name)
 	{
 		return this._games.stream().filter(e -> e.getName().equals(name))

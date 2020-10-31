@@ -9,21 +9,18 @@ public abstract class MiniGame
 	private final ArrayList<Player> _players;
 	private final GameManager _manager;
 	private final Location _lobbyLocation;
-	private final String gameName;
+	private final String name;
+	protected int _maxPlayer = 4;
+	protected boolean enforceMaxPlayer = true;
 
-	public String getName()
-	{
-		return this.gameName;
-	}
 
-	public MiniGame(GameManager manager, String gameName)
+	public MiniGame(GameManager manager, String name)
 	{
 		this._manager = manager;
 		this._lobbyLocation = null;
 		this._players = new ArrayList<Player>();
-		this.gameName = gameName;
+		this.name = name;
 	}
-
 
 	public abstract GameType getType();
 	
@@ -47,7 +44,12 @@ public abstract class MiniGame
 		player.teleport(this._lobbyLocation);
 		return true;
 	}
-	
+
+	public boolean isPlayerInGame(Player player)
+	{
+		return _players.contains(player);
+	}
+
 	//! @brief Method called when a player wants to leave the game.
 	//! @param player The player who will leave.
 	public void removePlayer(Player player)
@@ -70,6 +72,16 @@ public abstract class MiniGame
 		{
 			_manager.deleteGame(this);
 		}
+	}
+
+	public void setEnforceMaxPlayer(boolean enforceMaxPlayer)
+	{
+		this.enforceMaxPlayer = enforceMaxPlayer;
+	}
+
+	public String getName()
+	{
+		return this.name;
 	}
 
 	@Override
