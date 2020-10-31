@@ -3,25 +3,43 @@ package moe.sdg.PluginSDG;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public abstract class MiniGame
 {
 	private final ArrayList<Player> _players;
 	private final GameManager _manager;
 	private final Location _lobbyLocation;
-	private final String gameName;
+	private final String name;
+	protected int _maxPlayer = 4;
 
-	public String getName() {
-		return gameName;
+	public GameManager get_manager() {
+		return _manager;
 	}
 
-	public MiniGame(GameManager manager, String gameName)
+	public Location get_lobbyLocation() {
+		return _lobbyLocation;
+	}
+
+	public boolean isEnforceMaxPlayer() {
+		return enforceMaxPlayer;
+	}
+
+	public void setEnforceMaxPlayer(boolean enforceMaxPlayer) {
+		this.enforceMaxPlayer = enforceMaxPlayer;
+	}
+
+	protected boolean enforceMaxPlayer = true;
+
+	public String getName() {
+		return name;
+	}
+
+	public MiniGame(GameManager manager, String name)
 	{
 		this._manager = manager;
 		this._lobbyLocation = null;
 		this._players = new ArrayList<Player>();
-		this.gameName = gameName;
+		this.name = name;
 	}
 
 
@@ -44,8 +62,13 @@ public abstract class MiniGame
 		if (this.getMaxPlayers() < this.getCurrentPlayers() + 1)
 			return false;
 		this._players.add(player);
-		player.teleport(this._lobbyLocation);
+		//player.teleport(this._lobbyLocation);
 		return true;
+	}
+
+	public boolean isPlayerInGame(Player player)
+	{
+		return _players.contains(player);
 	}
 	
 	//! @brief Method called when a player wants to leave the game.
@@ -54,10 +77,6 @@ public abstract class MiniGame
 	{
 		this._players.remove(player);
 		player.teleport(_manager.getHubLocation());
-		if(this.getCurrentPlayers() == 0)
-		{
-
-		}
 	}
 	
 	//! @brief Start the game.

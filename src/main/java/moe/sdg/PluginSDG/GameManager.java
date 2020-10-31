@@ -8,7 +8,6 @@ import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -16,7 +15,6 @@ public class GameManager extends JavaPlugin
 {
 
 	private ArrayList<MiniGame> _games;
-
 
 	@Override
 	public void onEnable()
@@ -39,8 +37,7 @@ public class GameManager extends JavaPlugin
 		super.onDisable();
 	}
 
-
-//! @brief return hub location
+	//! @brief return hub location
 	//! @return return a Location containing the server hub
 	public Location getHubLocation()
 	{
@@ -59,10 +56,13 @@ public class GameManager extends JavaPlugin
 				DeathMatch match =  gameName == null ? new DeathMatch(this, this.generateNewName()) :
 						new DeathMatch(this, gameName);
 				this._games.add(match);
+
 				return match;
 		}
 		return null;
 	}
+
+
 	public MiniGame createGame(GameType type, String map)
 	{
 		return this.createGame(type,map,null);
@@ -70,12 +70,13 @@ public class GameManager extends JavaPlugin
 
 	//! @brief generate a new possible game name of the form <unnamed: number>
 	//! @return
-	private String generateNewName(){
-		String name = "unnamed ";
-		int i = 0;
+	private String generateNewName()
+	{
+		String name = "unnamed";
+		int i = 1;
 		while (this.getGamesByName(name).size() != 0)
 		{
-			name += String.valueOf(i);
+			name = "unnamed" + String.valueOf(i);
 			i++;
 		}
 		return name;
@@ -88,16 +89,31 @@ public class GameManager extends JavaPlugin
 		this._games.remove(game);
 	}
 
+	//! @brief Return a list of game whose GameType match a given type
 	public ArrayList<MiniGame> getGamesByType(final GameType type)
 	{
 		return this._games.stream().filter(e -> e.getType() == type).collect(Collectors.toCollection(ArrayList::new));
 	}
 
+	//! @brief Return the list of game created
 	public  ArrayList<MiniGame>  getGames(){ return this._games;}
 
+	//! @brief return an array list of game witch name match the given name
+	//! @param name The name of the game to get
+	//! @return
 	public ArrayList<MiniGame> getGamesByName(String name)
 	{
 		return this._games.stream().filter(e -> e.getName().equals(name)).collect(Collectors.toCollection(ArrayList::new));
+	}
+
+	//! @brief return an single game witch name match a given name. If there is multiple candidate the first one is returned
+	//! @param name The name of the game to get
+	//! @return
+	public MiniGame getGameByName(String name)
+	{
+		ArrayList <MiniGame> game = getGamesByName(name);
+		if(game.size() == 0 ) return null;
+		return getGamesByName(name).get(0);
 	}
 
 }
