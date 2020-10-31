@@ -3,7 +3,6 @@ package moe.sdg.PluginSDG;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public abstract class MiniGame
 {
@@ -12,8 +11,9 @@ public abstract class MiniGame
 	private final Location _lobbyLocation;
 	private final String gameName;
 
-	public String getName() {
-		return gameName;
+	public String getName()
+	{
+		return this.gameName;
 	}
 
 	public MiniGame(GameManager manager, String gameName)
@@ -55,9 +55,7 @@ public abstract class MiniGame
 		this._players.remove(player);
 		player.teleport(_manager.getHubLocation());
 		if(this.getCurrentPlayers() == 0)
-		{
-
-		}
+			this.destroy();
 	}
 	
 	//! @brief Start the game.
@@ -70,8 +68,13 @@ public abstract class MiniGame
 	{
 		if(this.getCurrentPlayers() == 0)
 		{
-		_manager.deleteGame(this);
+			_manager.deleteGame(this);
 		}
 	}
 
+	@Override
+	public String toString()
+	{
+		return getType().toString() + " " + getCurrentPlayers() + "/" + getMaxPlayers() + " " + getName();
+	}
 }

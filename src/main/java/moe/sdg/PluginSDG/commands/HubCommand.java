@@ -1,4 +1,4 @@
-package moe.sdg.PluginSDG.Commands;
+package moe.sdg.PluginSDG.commands;
 
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -18,7 +18,8 @@ public class HubCommand implements CommandExecutor
 	
 	public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings)
 	{
-		if (commandSender instanceof Player) {
+		if (commandSender instanceof Player)
+		{
 			Player player = (Player)commandSender;
 			Location hub = config.getLocation("hub_pos");
 			if (hub != null && hub.getWorld() != null)

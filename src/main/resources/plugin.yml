@@ -10,5 +10,5 @@ commands:
     description: Set the hub location
     usage: /<command>
   sdg:
-    description: main command for all sdg sub-command
-    usage: /<command>
+    description: Base command for games
+    usage: /<command> <param>

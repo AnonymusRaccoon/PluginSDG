@@ -1,23 +1,20 @@
 package moe.sdg.PluginSDG;
 
-import moe.sdg.PluginSDG.Commands.SDGCommand;
+import moe.sdg.PluginSDG.commands.SDGCommand;
 import moe.sdg.PluginSDG.games.DeathMatch;
-import moe.sdg.PluginSDG.Commands.HubCommand;
-import moe.sdg.PluginSDG.Commands.SetHubCommand;
-import org.apache.commons.lang.NotImplementedException;
+import moe.sdg.PluginSDG.commands.HubCommand;
+import moe.sdg.PluginSDG.commands.SetHubCommand;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class GameManager extends JavaPlugin
 {
-
 	private ArrayList<MiniGame> _games;
 
-
+	@SuppressWarnings("ConstantConditions")
 	@Override
 	public void onEnable()
 	{
@@ -39,12 +36,11 @@ public class GameManager extends JavaPlugin
 		super.onDisable();
 	}
 
-
-//! @brief return hub location
+	//! @brief return hub location
 	//! @return return a Location containing the server hub
 	public Location getHubLocation()
 	{
-		throw new NotImplementedException();
+		return getConfig().getLocation("hub_pos");
 	}
 
 	//! @brief factory for creating new game
@@ -54,15 +50,17 @@ public class GameManager extends JavaPlugin
 	//! @return
 	public MiniGame createGame(GameType type, String map, String gameName)
 	{
-		switch (type) {
+		switch (type)
+		{
 			case DeathMatch:
-				DeathMatch match =  gameName == null ? new DeathMatch(this, this.generateNewName()) :
-						new DeathMatch(this, gameName);
+				DeathMatch match = new DeathMatch(this, map, gameName != null ? gameName : this.generateNewName());
 				this._games.add(match);
 				return match;
+			default:
+				return null;
 		}
-		return null;
 	}
+
 	public MiniGame createGame(GameType type, String map)
 	{
 		return this.createGame(type,map,null);
@@ -70,14 +68,11 @@ public class GameManager extends JavaPlugin
 
 	//! @brief generate a new possible game name of the form <unnamed: number>
 	//! @return
-	private String generateNewName(){
-		String name = "unnamed ";
-		int i = 0;
-		while (this.getGamesByName(name).size() != 0)
-		{
-			name += String.valueOf(i);
-			i++;
-		}
+	private String generateNewName()
+	{
+		String name = "Unnamed " + Math.random();
+		if (this.getGameByName(name) != null)
+			return this.generateNewName();
 		return name;
 	}
 
@@ -90,14 +85,19 @@ public class GameManager extends JavaPlugin
 
 	public ArrayList<MiniGame> getGamesByType(final GameType type)
 	{
-		return this._games.stream().filter(e -> e.getType() == type).collect(Collectors.toCollection(ArrayList::new));
+		return this._games.stream().filter(e -> e.getType() == type)
+			.collect(Collectors.toCollection(ArrayList::new));
 	}
 
-	public  ArrayList<MiniGame>  getGames(){ return this._games;}
-
-	public ArrayList<MiniGame> getGamesByName(String name)
+	public ArrayList<MiniGame> getGames()
 	{
-		return this._games.stream().filter(e -> e.getName().equals(name)).collect(Collectors.toCollection(ArrayList::new));
+		return this._games;
 	}
 
+	public MiniGame getGameByName(String name)
+	{
+		return this._games.stream().filter(e -> e.getName().equals(name))
+			.findFirst()
+			.orElse(null);
+	}
 }

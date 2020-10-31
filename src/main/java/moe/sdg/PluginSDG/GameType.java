@@ -1,5 +1,6 @@
 package moe.sdg.PluginSDG;
 
-public enum GameType {
+public enum GameType
+{
     DeathMatch
 }
