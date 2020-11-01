@@ -1,9 +1,12 @@
 package moe.sdg.PluginSDG;
 
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import moe.sdg.PluginSDG.commands.SDGCommand;
 import moe.sdg.PluginSDG.games.DeathMatch;
 import moe.sdg.PluginSDG.commands.HubCommand;
 import moe.sdg.PluginSDG.commands.SetHubCommand;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,11 +16,14 @@ import java.util.stream.Collectors;
 public class GameManager extends JavaPlugin
 {
 	private ArrayList<MiniGame> _games;
+	private WorldEditPlugin _worldEdit;
 
 	@SuppressWarnings("ConstantConditions")
 	@Override
 	public void onEnable()
 	{
+		this._worldEdit = (WorldEditPlugin)Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
+
 		FileConfiguration config = getConfig();
 		config.addDefault("hub_pos", new Location(getServer().getWorld("hub"), 0, 0, 0));
 		config.options().copyDefaults(true);
@@ -25,7 +31,7 @@ public class GameManager extends JavaPlugin
 
 		getCommand("hub").setExecutor(new HubCommand(config));
 		getCommand("sethub").setExecutor(new SetHubCommand(config));
-		getCommand("sdg").setExecutor(new SDGCommand(this));
+		getCommand("sdg").setExecutor(new SDGCommand(this, this._worldEdit));
 		_games = new ArrayList<>();
 		getLogger().info("Game manager loaded.");
 	}

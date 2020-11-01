@@ -1,5 +1,15 @@
 package moe.sdg.PluginSDG.commands;
 
+import com.sk89q.worldedit.*;
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
+import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
+import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.util.io.Closer;
 import moe.sdg.PluginSDG.GameManager;
 import moe.sdg.PluginSDG.GameType;
 import moe.sdg.PluginSDG.MiniGame;
@@ -9,16 +19,24 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.awt.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
 public class SDGCommand implements CommandExecutor
 {
-	GameManager gameManager;
+	private final GameManager _gameManager;
+	private final WorldEditPlugin _worldEdit;
 
-	public SDGCommand(GameManager gameManager)
+
+	public SDGCommand(GameManager gameManager, WorldEditPlugin worldEdit)
 	{
-		this.gameManager = gameManager;
+		this._gameManager = gameManager;
+		this._worldEdit = worldEdit;
 	}
 
 	public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args)
@@ -43,17 +61,24 @@ public class SDGCommand implements CommandExecutor
 			case "modify":
 				this.modifyCommand(commandSender, args);
 				break;
+		}
+
+		if (!(commandSender instanceof Player))
+		{
+			commandSender.sendMessage(ChatColor.BLUE + "This command can only be performed by player.");
+			return true;
+		}
+		Player player = (Player)commandSender;
+		switch (args[0])
+		{
 			case "join":
-				if (commandSender instanceof Player)
-					this.joinCommand((Player)commandSender, args);
-				else
-					commandSender.sendMessage(ChatColor.BLUE + "This command can only be performed by player.");
+				this.joinCommand(player, args);
 				break;
 			case "leave":
-				if (commandSender instanceof Player)
-					this.leaveCommand((Player)commandSender, args);
-				else
-					commandSender.sendMessage(ChatColor.BLUE + "This command can only be performed by player.");
+				this.leaveCommand(player, args);
+				break;
+			case "admin":
+				this.adminCommand(player, args);
 				break;
 		}
 		return true;
@@ -72,16 +97,16 @@ public class SDGCommand implements CommandExecutor
 			case "deathmatch":
 				if (args.length == 3)
 				{
-					gameManager.createGame(GameType.DeathMatch, args[2]);
+					_gameManager.createGame(GameType.DeathMatch, args[2]);
 					commandSender.sendMessage(ChatColor.BLUE + "Created deathmatch game with a default name since no name where precised");
 				}
 				else
 				{
-					if (gameManager.getGameByName(args[3]) != null)
+					if (_gameManager.getGameByName(args[3]) != null)
 						commandSender.sendMessage(ChatColor.BLUE + "Name is already used" + args[0]);
 					else
 					{
-						gameManager.createGame(GameType.DeathMatch, args[2], args[3]);
+						_gameManager.createGame(GameType.DeathMatch, args[2], args[3]);
 						commandSender.sendMessage(ChatColor.BLUE + "Created deathmatch game");
 					}
 				}
@@ -94,7 +119,7 @@ public class SDGCommand implements CommandExecutor
 
 	private void removeCommand(CommandSender commandSender, String[] args)
 	{
-		MiniGame game = gameManager.getGameByName(args[1]);
+		MiniGame game = _gameManager.getGameByName(args[1]);
 		if (game == null)
 			commandSender.sendMessage(ChatColor.BLUE + "Invalid game name: " + args[1]);
 		else
@@ -106,7 +131,7 @@ public class SDGCommand implements CommandExecutor
 
 	private void listCommand(CommandSender commandSender, String[] args)
 	{
-		ArrayList<MiniGame> games = gameManager.getGames();
+		ArrayList<MiniGame> games = _gameManager.getGames();
 		commandSender.sendMessage(ChatColor.BLUE + "=====" + ChatColor.DARK_RED + "Game list" + ChatColor.BLUE + "=====");
 
 		if (games.size() == 0)
@@ -127,7 +152,7 @@ public class SDGCommand implements CommandExecutor
 			return;
 		}
 
-		MiniGame game = gameManager.getGameByName(args[1]);
+		MiniGame game = _gameManager.getGameByName(args[1]);
 		if(game == null)
 		{
 			commandSender.sendMessage(ChatColor.BLUE + "Invalid game name: " + args[1]);
@@ -155,7 +180,7 @@ public class SDGCommand implements CommandExecutor
 			return;
 		}
 
-		MiniGame game = gameManager.getGameByName(args[1]);
+		MiniGame game = _gameManager.getGameByName(args[1]);
 		if(game == null)
 		{
 			player.sendMessage(ChatColor.BLUE + "Invalid game name: " + args[1]);
@@ -182,18 +207,66 @@ public class SDGCommand implements CommandExecutor
 			return;
 		}
 
-		MiniGame game = gameManager.getGameByName(args[1]);
-		if(game == null)
+		MiniGame game = _gameManager.getGameByName(args[1]);
+		if (game == null)
 		{
 			player.sendMessage(ChatColor.BLUE + "Invalid game name: " + args[1]);
 			return;
 		}
-		if(game.isPlayerInGame(player))
+
+		if (game.isPlayerInGame(player))
 		{
 			game.removePlayer(player);
 			player.sendMessage(ChatColor.BLUE + "Left game " + game.getName());
 		}
 		else
 			player.sendMessage(ChatColor.BLUE + "You can't leave " +  game.getName() + "because you are not in it");
+	}
+
+	private void adminCommand(Player player, String[] args)
+	{
+		if (args.length != 3 || (!args[1].equals("map") && args[1].equals("lobby")))
+		{
+			player.sendMessage(ChatColor.BLUE + "usage: /sdg admin <map|lobby> <name>");
+			return;
+		}
+
+		LocalSession session = this._worldEdit.getSession(player);
+		com.sk89q.worldedit.entity.Player wePlayer = this._worldEdit.wrapPlayer(player);
+		EditSession editSession = session.createEditSession(wePlayer);
+		Closer closer = Closer.create();
+
+		try
+		{
+			Region region = session.getSelection(wePlayer.getWorld());
+			Clipboard cb = new BlockArrayClipboard(region);
+			ForwardExtentCopy copy = new ForwardExtentCopy(editSession, region, cb, region.getMinimumPoint());
+			Operations.complete(copy);
+			LocalConfiguration config = this._worldEdit.getWorldEdit().getConfiguration();
+			File dir = new File(this._gameManager.getDataFolder(), args[1]);
+			if (!dir.exists() && !dir.mkdirs())
+				throw new IOException("Could not create directory " + config.saveDir);
+			File schematicFile = new File(dir, args[2] + ".schematic");
+			schematicFile.createNewFile();
+
+			FileOutputStream fos = closer.register(new FileOutputStream(schematicFile));
+			BufferedOutputStream bos = closer.register(new BufferedOutputStream(fos));
+			ClipboardWriter writer = closer.register(BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(bos));
+			writer.write(cb);
+		}
+		catch (IOException | WorldEditException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				closer.close();
+				editSession.flushSession();
+			}
+			catch (IOException ignore) { }
+		}
+		player.sendMessage(Color.BLUE + "Map saved successfully.");
 	}
 }
