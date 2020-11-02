@@ -1,22 +1,44 @@
 package moe.sdg.PluginSDG;
 
+import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.WorldEditException;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
+import com.sk89q.worldedit.function.operation.Operation;
+import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.session.ClipboardHolder;
 import moe.sdg.PluginSDG.commands.SDGCommand;
+import moe.sdg.PluginSDG.exceptions.InvalidMapException;
+import moe.sdg.PluginSDG.exceptions.MapNotFoundException;
 import moe.sdg.PluginSDG.games.DeathMatch;
 import moe.sdg.PluginSDG.commands.HubCommand;
 import moe.sdg.PluginSDG.commands.SetHubCommand;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
+import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class GameManager extends JavaPlugin
 {
 	private ArrayList<MiniGame> _games;
 	private WorldEditPlugin _worldEdit;
+	private Vector nextGameLocation = new Vector(0, 150, 0);
 
 	@SuppressWarnings("ConstantConditions")
 	@Override
@@ -59,28 +81,13 @@ public class GameManager extends JavaPlugin
 		switch (type)
 		{
 			case DeathMatch:
-				DeathMatch match = new DeathMatch(this, map, gameName != null ? gameName : this.generateNewName());
+				DeathMatch match = new DeathMatch(this, map, gameName);
 				this._games.add(match);
 
 				return match;
 			default:
 				return null;
 		}
-	}
-
-	public MiniGame createGame(GameType type, String map)
-	{
-		return this.createGame(type,map,null);
-	}
-
-	//! @brief generate a new possible game name of the form <unnamed: number>
-	//! @return
-	private String generateNewName()
-	{
-		String name = "Unnamed " + Math.random();
-		if (this.getGameByName(name) != null)
-			return this.generateNewName();
-		return name;
 	}
 
 	//! @brief delete a game
@@ -111,5 +118,71 @@ public class GameManager extends JavaPlugin
 		return this._games.stream().filter(e -> e.getName().equals(name))
 			.findFirst()
 			.orElse(null);
+	}
+
+	public GameMap generateMap(String name)
+	{
+		File dir = new File(this.getDataFolder(), "map");
+		if (!dir.exists())
+			throw new MapNotFoundException();
+
+		File file = new File(dir, name + ".schematic");
+		if (!file.exists())
+			throw new MapNotFoundException();
+		ClipboardFormat format = ClipboardFormats.findByFile(file);
+		if (format == null)
+			throw new InvalidMapException();
+		try (ClipboardReader reader = format.getReader(new FileInputStream(file)))
+		{
+			Clipboard clipboard = reader.read();
+			World world = this._getGameWorld();
+			try (EditSession editSession = WorldEdit.getInstance()
+				.getEditSessionFactory()
+				.getEditSession(BukkitAdapter.adapt(world), -1))
+			{
+				Operation operation = new ClipboardHolder(clipboard)
+					.createPaste(editSession)
+					.to(BlockVector3.at(nextGameLocation.getX(), nextGameLocation.getY(), nextGameLocation.getZ()))
+					.build();
+				Operations.complete(operation);
+				clipboard.setOrigin(BlockVector3.at(nextGameLocation.getX(), nextGameLocation.getY(), nextGameLocation.getZ()));
+				nextGameLocation.add(new Vector(200, 0, 0));
+				return new GameMap(clipboard, world);
+			}
+		}
+		catch (IOException | WorldEditException e)
+		{
+			e.printStackTrace();
+			throw new InvalidMapException();
+		}
+	}
+
+	private World _getGameWorld()
+	{
+		World world = Bukkit.getWorld("sdg_games");
+		if (world != null)
+			return world;
+		return Bukkit.createWorld(new WorldCreator("sdg_games")
+			.type(WorldType.FLAT)
+			.generator(new ChunkGenerator()
+			{
+				@Override
+				public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome)
+				{
+					return createChunkData(world);
+				}
+
+				@Override
+				public boolean shouldGenerateMobs()
+				{
+					return false;
+				}
+
+				@Override
+				public List<BlockPopulator> getDefaultPopulators(World world)
+				{
+					return new ArrayList<>();
+				}
+			}));
 	}
 }

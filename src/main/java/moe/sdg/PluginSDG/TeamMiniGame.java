@@ -38,9 +38,9 @@ public abstract class TeamMiniGame extends MiniGame
 	private final ArrayList<Team> _teams;
 	
 	
-	public TeamMiniGame(GameManager manager, String gameName)
+	public TeamMiniGame(GameManager manager, String map, String gameName)
 	{
-		super(manager, gameName);
+		super(manager, map, gameName);
 		this._teams = new ArrayList<Team>();
 	}
 	

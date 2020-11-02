@@ -11,7 +11,7 @@ public class DeathMatch extends MiniGame
 
     public DeathMatch(GameManager gameManager, String map, String name)
     {
-        super(gameManager, name);
+        super(gameManager, map, name);
     }
 
     @Override

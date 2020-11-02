@@ -8,17 +8,17 @@ public abstract class MiniGame
 {
 	private final ArrayList<Player> _players;
 	private final GameManager _manager;
-	private final Location _lobbyLocation;
+	private final GameMap _map;
 	private final String name;
 	protected int _maxPlayer = 4;
 	protected boolean enforceMaxPlayer = true;
 
 
-	public MiniGame(GameManager manager, String name)
+	public MiniGame(GameManager manager, String mapName, String name)
 	{
 		this._manager = manager;
-		this._lobbyLocation = null;
-		this._players = new ArrayList<Player>();
+		this._map = this._manager.generateMap(mapName);;
+		this._players = new ArrayList<>();
 		this.name = name;
 	}
 
@@ -41,7 +41,7 @@ public abstract class MiniGame
 		if (this.getMaxPlayers() < this.getCurrentPlayers() + 1)
 			return false;
 		this._players.add(player);
-		player.teleport(this._lobbyLocation);
+		player.teleport(this._map.lobbyLocation);
 		return true;
 	}
 

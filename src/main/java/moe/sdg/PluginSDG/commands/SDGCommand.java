@@ -8,17 +8,19 @@ import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.io.Closer;
 import moe.sdg.PluginSDG.GameManager;
 import moe.sdg.PluginSDG.GameType;
 import moe.sdg.PluginSDG.MiniGame;
+import moe.sdg.PluginSDG.exceptions.MapException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
 import java.awt.*;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -92,28 +94,48 @@ public class SDGCommand implements CommandExecutor
 			return;
 		}
 
+		GameType type = GameType.None;
 		switch (args[1].toLowerCase())
 		{
 			case "deathmatch":
-				if (args.length == 3)
-				{
-					_gameManager.createGame(GameType.DeathMatch, args[2]);
-					commandSender.sendMessage(ChatColor.BLUE + "Created deathmatch game with a default name since no name where precised");
-				}
-				else
-				{
-					if (_gameManager.getGameByName(args[3]) != null)
-						commandSender.sendMessage(ChatColor.BLUE + "Name is already used" + args[0]);
-					else
-					{
-						_gameManager.createGame(GameType.DeathMatch, args[2], args[3]);
-						commandSender.sendMessage(ChatColor.BLUE + "Created deathmatch game");
-					}
-				}
+				type = GameType.DeathMatch;
 				break;
 			default:
 				commandSender.sendMessage(ChatColor.BLUE + "Unknown game type " + args[1]);
-				break;
+				return;
+		}
+
+		try
+		{
+			MiniGame game = null;
+			if (args.length == 3)
+			{
+				int i = 1;
+				String name = null;
+				while (name == null || _gameManager.getGameByName(name) != null)
+					name = commandSender.getName() + "#" + i++;
+				game = _gameManager.createGame(type, args[2], name);
+				commandSender.sendMessage(ChatColor.BLUE + "Created deathmatch game with a default name since no name where precised");
+			}
+			else
+			{
+				if (args[3].contains(" "))
+					commandSender.sendMessage(ChatColor.BLUE + "A game can't have a space in it's name.");
+				else if (_gameManager.getGameByName(args[3]) != null)
+					commandSender.sendMessage(ChatColor.BLUE + "Name is already used" + args[0]);
+				else
+				{
+					game = _gameManager.createGame(type, args[2], args[3]);
+					commandSender.sendMessage(ChatColor.BLUE + "Created deathmatch game");
+				}
+			}
+
+			if (commandSender instanceof Player && game != null)
+				game.join((Player)commandSender);
+		}
+		catch (MapException e)
+		{
+			commandSender.sendMessage(e.toString());
 		}
 	}
 
@@ -240,14 +262,21 @@ public class SDGCommand implements CommandExecutor
 		{
 			Region region = session.getSelection(wePlayer.getWorld());
 			Clipboard cb = new BlockArrayClipboard(region);
+			cb.setOrigin(session.getPlacementPosition(wePlayer));
 			ForwardExtentCopy copy = new ForwardExtentCopy(editSession, region, cb, region.getMinimumPoint());
+			copy.setCopyingEntities(true);
+			copy.setCopyingBiomes(true);
 			Operations.complete(copy);
 			LocalConfiguration config = this._worldEdit.getWorldEdit().getConfiguration();
 			File dir = new File(this._gameManager.getDataFolder(), args[1]);
 			if (!dir.exists() && !dir.mkdirs())
 				throw new IOException("Could not create directory " + config.saveDir);
 			File schematicFile = new File(dir, args[2] + ".schematic");
-			schematicFile.createNewFile();
+			if (!schematicFile.createNewFile())
+			{
+				player.sendMessage("A map with the same name already exists.");
+				return;
+			}
 
 			FileOutputStream fos = closer.register(new FileOutputStream(schematicFile));
 			BufferedOutputStream bos = closer.register(new BufferedOutputStream(fos));
@@ -267,6 +296,6 @@ public class SDGCommand implements CommandExecutor
 			}
 			catch (IOException ignore) { }
 		}
-		player.sendMessage(Color.BLUE + "Map saved successfully.");
+		player.sendMessage(ChatColor.BLUE + "Map saved successfully.");
 	}
 }
