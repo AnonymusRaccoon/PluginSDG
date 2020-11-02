@@ -1,7 +1,7 @@
 package moe.sdg.PluginSDG.games;
 
 import moe.sdg.PluginSDG.GameManager;
-import moe.sdg.PluginSDG.GameType;
+import moe.sdg.PluginSDG.enums.GameType;
 import moe.sdg.PluginSDG.MiniGame;
 
 public class DeathMatch extends MiniGame

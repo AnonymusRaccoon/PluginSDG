@@ -1,4 +1,4 @@
-package moe.sdg.PluginSDG;
+package moe.sdg.PluginSDG.enums;
 
 public enum GameType
 {

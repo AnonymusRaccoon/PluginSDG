@@ -18,18 +18,25 @@ import moe.sdg.PluginSDG.exceptions.InvalidMapException;
 import moe.sdg.PluginSDG.exceptions.MapNotFoundException;
 import moe.sdg.PluginSDG.games.DeathMatch;
 import moe.sdg.PluginSDG.commands.HubCommand;
+import moe.sdg.PluginSDG.commands.SDGCommand;
 import moe.sdg.PluginSDG.commands.SetHubCommand;
+import moe.sdg.PluginSDG.enums.GameType;
+import moe.sdg.PluginSDG.gui.GuiController;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -39,6 +46,9 @@ public class GameManager extends JavaPlugin
 	private ArrayList<MiniGame> _games;
 	private WorldEditPlugin _worldEdit;
 	private Vector nextGameLocation = new Vector(0, 150, 0);
+	private HashMap<Player,MiniGame> _playerInGame;
+
+	private GuiController _guiController;
 
 	@SuppressWarnings("ConstantConditions")
 	@Override
@@ -54,9 +64,18 @@ public class GameManager extends JavaPlugin
 		getCommand("hub").setExecutor(new HubCommand(config));
 		getCommand("sethub").setExecutor(new SetHubCommand(config));
 		getCommand("sdg").setExecutor(new SDGCommand(this, this._worldEdit));
+
 		_games = new ArrayList<>();
+		_guiController = new GuiController(this);
+		_playerInGame = new HashMap<>();
 		getLogger().info("Game manager loaded.");
 	}
+
+	public GuiController get_guiController()
+	{
+		return _guiController;
+	}
+
 
 	@Override
 	public void onDisable()
@@ -71,7 +90,7 @@ public class GameManager extends JavaPlugin
 		return getConfig().getLocation("hub_pos");
 	}
 
-	//! @brief factory for creating new game
+	//! @brief fabric for creating new game
 	//! @param type The type of game to create
 	//! @param map the name of the map to use
 	//! @param gameName the name of the new game
@@ -184,5 +203,22 @@ public class GameManager extends JavaPlugin
 					return new ArrayList<>();
 				}
 			}));
+	}
+
+	public boolean addPlayer(Player player, MiniGame game)
+	{
+		if(_playerInGame.containsKey(player)) return false;
+		_playerInGame.put(player,game);
+		return true;
+	}
+
+	public void removePlayer(Player player)
+	{
+		_playerInGame.remove(player);
+	}
+
+	public MiniGame GetPlayerGame(Player player)
+	{
+		return _playerInGame.get(player);
 	}
 }

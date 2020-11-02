@@ -1,5 +1,6 @@
 package moe.sdg.PluginSDG;
 
+import moe.sdg.PluginSDG.enums.GameType;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import java.util.ArrayList;
@@ -29,6 +30,11 @@ public abstract class MiniGame
 	{
 		return this._players.size();
 	}
+
+	public ArrayList<Player> getPlayerList()
+	{
+		return _players;
+	}
 	
 	//! @brief Maximum number of player in the game.
 	public abstract int getMaxPlayers();
@@ -42,8 +48,17 @@ public abstract class MiniGame
 			return false;
 		this._players.add(player);
 		player.teleport(this._map.lobbyLocation);
+		_manager.addPlayer(player, this);
+
 		return true;
 	}
+
+	//! @brief Can a player join this game
+	public boolean isJoinable()
+	{
+		return this.getMaxPlayers() < this.getCurrentPlayers() + 1;
+	}
+
 
 	public boolean isPlayerInGame(Player player)
 	{
@@ -55,6 +70,7 @@ public abstract class MiniGame
 	public void removePlayer(Player player)
 	{
 		this._players.remove(player);
+		_manager.removePlayer(player);
 		player.teleport(_manager.getHubLocation());
 		if(this.getCurrentPlayers() == 0)
 			this.destroy();

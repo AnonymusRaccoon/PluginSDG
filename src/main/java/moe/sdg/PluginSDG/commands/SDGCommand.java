@@ -13,8 +13,9 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.io.Closer;
 import moe.sdg.PluginSDG.GameManager;
-import moe.sdg.PluginSDG.GameType;
+import moe.sdg.PluginSDG.enums.GameType;
 import moe.sdg.PluginSDG.MiniGame;
+import moe.sdg.PluginSDG.gui.GameSelectorGui;
 import moe.sdg.PluginSDG.exceptions.MapException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -27,6 +28,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import static moe.sdg.PluginSDG.enums.GuiType.GAMESELECTOR;
 
 
 public class SDGCommand implements CommandExecutor
@@ -43,9 +46,10 @@ public class SDGCommand implements CommandExecutor
 
 	public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args)
 	{
-		if (args.length == 0)
+		if (args.length == 0 && commandSender instanceof Player)
 		{
-			commandSender.sendMessage(ChatColor.BLUE + "usage: /sdg <action>");
+			GameSelectorGui gui = this._gameManager.get_guiController().createInventory(GAMESELECTOR, ((Player) commandSender).getPlayer());
+			gui.openInventory(((Player) commandSender).getPlayer());
 			return true;
 		}
 
