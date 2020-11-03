@@ -14,11 +14,13 @@ public class GameMap
 	public Location lobbyLocation;
 
 	public ArrayList<Location> spawnLocations;
+	private String _mapName;
 
 	public GameMap() { }
 
-	public GameMap(Clipboard clipboard, World world)
+	public GameMap(Clipboard clipboard, World world, String mapName)
 	{
+		this._mapName = mapName;
 		BlockVector3 o = clipboard.getOrigin();
 		this.lobbyLocation = new Location(world, o.getX(), o.getY(), o.getZ());
 		for (BlockVector3 b : clipboard.getRegion())

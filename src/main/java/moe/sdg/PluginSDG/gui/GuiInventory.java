@@ -40,6 +40,7 @@ public abstract class GuiInventory implements Listener
 		final ItemMeta meta = item.getItemMeta();
 
 		// Set the name of the item
+		if(meta == null) return item;
 		meta.setDisplayName(name);
 
 		// Set the lore of the item

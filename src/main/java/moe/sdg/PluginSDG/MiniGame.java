@@ -14,11 +14,10 @@ public abstract class MiniGame
 	protected int _maxPlayer = 4;
 	protected boolean enforceMaxPlayer = true;
 
-
 	public MiniGame(GameManager manager, String mapName, String name)
 	{
 		this._manager = manager;
-		this._map = this._manager.generateMap(mapName);;
+		this._map = this._manager.generateMap(mapName);
 		this._players = new ArrayList<>();
 		this.name = name;
 	}
@@ -44,7 +43,7 @@ public abstract class MiniGame
 	//! @return True if the player has joined the game, false otherwise.
 	public boolean join(Player player)
 	{
-		if (this.getMaxPlayers() < this.getCurrentPlayers() + 1)
+		if (this.getMaxPlayers() > this.getCurrentPlayers() + 1)
 			return false;
 		this._players.add(player);
 		player.teleport(this._map.lobbyLocation);
@@ -56,7 +55,7 @@ public abstract class MiniGame
 	//! @brief Can a player join this game
 	public boolean isJoinable()
 	{
-		return this.getMaxPlayers() < this.getCurrentPlayers() + 1;
+		return this.getMaxPlayers() > this.getCurrentPlayers() + 1;
 	}
 
 

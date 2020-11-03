@@ -114,6 +114,10 @@ public class GameManager extends JavaPlugin
 	public void deleteGame(MiniGame game)
 	{
 		this._games.remove(game);
+		for(Player player : game.getPlayerList())
+		{
+			this.removePlayer(player);
+		}
 	}
 
 	//! @brief Return a list of game whose GameType match a given type
@@ -166,7 +170,7 @@ public class GameManager extends JavaPlugin
 				Operations.complete(operation);
 				clipboard.setOrigin(BlockVector3.at(nextGameLocation.getX(), nextGameLocation.getY(), nextGameLocation.getZ()));
 				nextGameLocation.add(new Vector(200, 0, 0));
-				return new GameMap(clipboard, world);
+				return new GameMap(clipboard, world, name);
 			}
 		}
 		catch (IOException | WorldEditException e)
@@ -217,8 +221,16 @@ public class GameManager extends JavaPlugin
 		_playerInGame.remove(player);
 	}
 
+
 	public MiniGame GetPlayerGame(Player player)
 	{
 		return _playerInGame.get(player);
 	}
+
+	//TODO: implement getGamesMap returning the list of maps for a given GameType
+	public GameMap[] getGamesMap(GameType type)
+	{
+		return new GameMap[0];
+	}
+
 }
